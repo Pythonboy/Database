@@ -185,23 +185,92 @@ ON a.S# = b.S#
 
 
 
+#### 5.查询「李」姓老师的数量 
+
+```sql
+SELECT Count(T#) FROM Teacher WHERE Tname LIKE "李%";
+```
 
 
 
+#### 6. 查询学过「张三」老师授课的同学的信息 
+
+```sql
+SELECT * FROM Student
+WHERE S# IN(
+SELECT DISTINCT S# FROM SC
+WHERE C# IN (SELECT C# FROM Course INNER JOIN Teacher ON Course.T# = Teacher.T# WHERE Teacher.Tname = "张三")
+)
+```
 
 
 
+#### 7.查询没有学全所有课程的同学的信息 
+
+```sql
+SELECT * FROM Student
+WHERE S# NOT IN(
+SELECT S# FROM SC GROUP BY S# HAVING Count(C#) = ALL (SELCET Count(C#) FROM Course GROUP BY C#))
+```
 
 
 
+#### 8.查询至少有一门课与学号为" 01 "的同学所学相同的同学的信息 
+
+```sql
+SELECT * FROM Student 
+WHERE S# IN(SELECT DISTINCT S# FROM SC WHERE C# IN(SELECT C# FROM SC WHERE S# = '01'))
+```
 
 
 
+#### 9.查询和" 01 "号的同学学习的课程完全相同的其他同学的信息
+
+```sql
+SELECT * FROM Student 
+WHERE S# IN(SELECT DISTINCT S# FROM SC WHERE C# IN (SELECT C# FROM SC WHERE S# = '01') and S# != '01' GROUP BY S# HAVING COUNT(C#)>=3)
+```
 
 
 
+#### 10.查询没学过"张三"老师讲授的任一门课程的学生姓名
+
+```sql
+SELECT * FROM Student
+WHERE S# NOT IN(
+SELECT DISTINCT S# FROM SC
+WHERE C# IN (SELECT C# FROM Course 
+WHERE T# IN (SELECT T# FROM Teacher WHERE Tname = "张三" ))
+)
+```
 
 
+
+#### 11.查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩 
+
+```sql
+SELECT s.S#,s.Sname,AVG(b.score)
+FROM Student s 
+INNER JOIN SC b
+ON s.S# = b.S
+WHERE S# IN(SELECT DISTINCT S# FROM SC WHERE score < 60 GROUP BY S# HAVING Count(score) >= 2)
+GROUP BY S#
+```
+
+
+
+#### 12.检索" 01 "课程分数小于 60，按分数降序排列的学生信息
+
+```sql
+SELECT a.S#,a.Sname,a.Sage,a.Ssex
+FROM Student a
+INNER JOIN (SELECT S#,score FROM SC WHERE C# = '01' and score < 60) b
+ORDER BY b.score DESC
+```
+
+
+
+#### 13.按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
 
 
 
